@@ -1,0 +1,96 @@
+#include <AccelStepper.h>
+
+// Motorpinnen
+const int motorStepPin = 25;
+const int motorDirPin = 26;
+
+// Encoderpinnen
+const int encoderA = 32;
+const int encoderB = 35;
+const int encoderZ = 34;
+
+// Encoderpositie
+volatile int encoderPosition = 0;
+volatile bool zPulseDetected = false;
+
+// Motorparameters
+int targetPosition = 0; // Doelwaarde voor de encoder
+
+// AccelStepper-object
+AccelStepper stepper(AccelStepper::DRIVER, motorStepPin, motorDirPin);
+
+// Encoder interrupt handlers
+void IRAM_ATTR handleEncoderA() {
+  if (digitalRead(encoderA) == digitalRead(encoderB)) {
+    encoderPosition++;
+  } else {
+    encoderPosition--;
+  }
+}
+
+void IRAM_ATTR handleEncoderZ() {
+  zPulseDetected = true;
+}
+
+void setup() {
+  // Seriële monitor
+  Serial.begin(115200);
+
+  // Motor setup
+  stepper.setMaxSpeed(1000);  // Max snelheid in stappen per seconde
+  stepper.setAcceleration(500); // Versnelling in stappen per seconde^2
+
+  // Encoder setup
+  pinMode(encoderA, INPUT_PULLUP);
+  pinMode(encoderB, INPUT_PULLUP);
+  pinMode(encoderZ, INPUT_PULLUP);
+
+  attachInterrupt(digitalPinToInterrupt(encoderA), handleEncoderA, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(encoderZ), handleEncoderZ, RISING);
+
+  // Debugbericht
+  Serial.println("Motor en encoder gestart. Geef doelwaarde in via seriële monitor.");
+  Serial.println("Gebruik 'reset' om de encoderwaarde te resetten naar 0.");
+}
+
+void loop() {
+  // Controleer seriële invoer
+  if (Serial.available()) {
+    String input = Serial.readStringUntil('\n');
+    input.trim();
+
+    if (input == "reset") {
+      encoderPosition = 0;
+      Serial.println("Encoderwaarde gereset naar 0.");
+    } else if (input.toInt() != 0 || input == "0") {
+      targetPosition = input.toInt();
+      stepper.moveTo(targetPosition); // Stel doelpositie in
+      Serial.print("Doelwaarde ingesteld: ");
+      Serial.println(targetPosition);
+    } else {
+      Serial.println("Ongeldige invoer. Geef een getal in.");
+    }
+  }
+
+  // Motorbesturing op basis van encoder
+  if (stepper.distanceToGo() != 0) {
+    stepper.run(); // Verplaatst motor naar de doelpositie
+  } else if (targetPosition == encoderPosition) {
+    Serial.println("Doelwaarde bereikt!");
+  }
+
+  // Debuginformatie
+  static unsigned long lastPrintTime = 0;
+  if (millis() - lastPrintTime > 500) {
+    lastPrintTime = millis();
+    Serial.print("Encoderpositie: ");
+    Serial.print(encoderPosition);
+    Serial.print(" - Doelwaarde: ");
+    Serial.println(targetPosition);
+
+    if (zPulseDetected) {
+      Serial.println("Z-pulse gedetecteerd!");
+      zPulseDetected = false;
+    }
+  }
+}
