@@ -1,3 +1,5 @@
+#include <AccelStepper.h>
+
 // Motorpinnen
 const int motorStepPin = 25;
 const int motorDirPin = 26;
@@ -11,11 +13,11 @@ const int encoderZ = 34;
 volatile int encoderPosition = 0;
 volatile bool zPulseDetected = false;
 
-// Motorparameters
-unsigned long lastStepTime = 0;
-const unsigned long stepInterval = 1000; // 1 ms tussen stappen
-int targetPosition = 0; // Doelwaarde voor de encoder
-bool motorMoving = false; // Houd bij of de motor actief is
+// Doelwaarde
+int targetPosition = 0;
+
+// AccelStepper-instantie
+AccelStepper stepper(AccelStepper::DRIVER, motorStepPin, motorDirPin);
 
 // Encoder interrupt handlers
 void IRAM_ATTR handleEncoderA() {
@@ -35,15 +37,14 @@ void setup() {
   Serial.begin(115200);
 
   // Motor setup
-  pinMode(motorStepPin, OUTPUT);
-  pinMode(motorDirPin, OUTPUT);
-  digitalWrite(motorDirPin, LOW);
+  stepper.setMaxSpeed(1000); // Maximale snelheid
+  stepper.setAcceleration(500); // Versnelling
 
   // Encoder setup
   pinMode(encoderA, INPUT_PULLUP);
   pinMode(encoderB, INPUT_PULLUP);
   pinMode(encoderZ, INPUT_PULLUP);
-  
+
   attachInterrupt(digitalPinToInterrupt(encoderA), handleEncoderA, CHANGE);
   attachInterrupt(digitalPinToInterrupt(encoderZ), handleEncoderZ, RISING);
 
@@ -66,7 +67,7 @@ void loop() {
     // Controleer of het een geldig getal is voor doelwaarde
     else if (input.toInt() != 0 || input == "0") {
       targetPosition = input.toInt(); // Stel doelwaarde in
-      motorMoving = true;
+      stepper.moveTo(targetPosition); // Beweeg naar doelwaarde
       Serial.print("Doelwaarde ingesteld: ");
       Serial.println(targetPosition);
     } else {
@@ -74,27 +75,8 @@ void loop() {
     }
   }
 
-  // Motorbesturing op basis van encoder
-  if (motorMoving) {
-    if (encoderPosition != targetPosition) {
-      // Stel richting in
-      bool direction = encoderPosition < targetPosition;
-      digitalWrite(motorDirPin, direction);
-
-      // Stap maken
-      unsigned long currentTime = micros();
-      if (currentTime - lastStepTime >= stepInterval) {
-        lastStepTime = currentTime;
-        digitalWrite(motorStepPin, HIGH);
-        delayMicroseconds(5); // Korte puls
-        digitalWrite(motorStepPin, LOW);
-      }
-    } else {
-      // Doelwaarde bereikt, stop de motor
-      motorMoving = false;
-      Serial.println("Doelwaarde bereikt!");
-    }
-  }
+  // Beweeg de motor naar de doelpositie
+  stepper.run();
 
   // Encoder debuginformatie
   static unsigned long lastPrintTime = 0;
