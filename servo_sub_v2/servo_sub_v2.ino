@@ -141,7 +141,7 @@ void setup() {
     &xyz_subscriber,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Point32),
-      "/arm_pos"));
+      "/xyz"));
 
 
   // create executor
