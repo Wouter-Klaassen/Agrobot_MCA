@@ -1,0 +1,41 @@
+GPIO	Input	Output	Speciale functies
+GPIO0	Ja	Ja	Boot Mode, ADC, Touch, PWM, I2C, SPI, UART
+GPIO1	Ja	Ja	UART, PWM, I2C
+GPIO2	Ja	Ja	Boot Mode, ADC, Touch, PWM, I2C, SPI
+GPIO3	Ja	Ja	UART, PWM, I2C
+GPIO4	Ja	Ja	ADC, Touch, PWM, I2C
+GPIO5	Ja	Ja	SPI, PWM, I2C
+GPIO6	Nee	Nee	(SDIO, Flash)
+GPIO7	Nee	Nee	(SDIO, Flash)
+GPIO8	Nee	Nee	(SDIO, Flash)
+GPIO9	Nee	Nee	(SDIO, Flash)
+GPIO10	Nee	Nee	(SDIO, Flash)
+GPIO11	Nee	Nee	(SDIO, Flash)
+GPIO12	Ja	Ja	Boot Mode, ADC, Touch, PWM, I2C, SPI
+GPIO13	Ja	Ja	SPI, PWM, I2C
+GPIO14	Ja	Ja	SPI, PWM, I2C
+GPIO15	Ja	Ja	Boot Mode, ADC, Touch, PWM, I2C
+GPIO16	Ja	Ja	UART, PWM, I2C
+GPIO17	Ja	Ja	UART, SPI, PWM, I2C
+GPIO18	Ja	Ja	SPI, PWM, I2C
+GPIO19	Ja	Ja	SPI, PWM, I2C
+GPIO20	Ja	Ja	I2C, PWM
+GPIO21	Ja	Ja	I2C, PWM
+GPIO22	Ja	Ja	UART, SPI, PWM, I2C
+GPIO23	Ja	Ja	SPI, PWM, I2C
+GPIO24	Ja	Ja	PWM, ADC
+GPIO25	Ja	Ja	PWM, ADC
+GPIO26	Ja	Ja	PWM, ADC
+GPIO27	Ja	Ja	ADC, Touch, PWM, I2C
+GPIO28	Ja	Ja	ADC, Touch, PWM
+GPIO29	Ja	Ja	ADC, Touch, PWM
+GPIO30	Ja	Nee	ADC, Touch
+GPIO31	Ja	Nee	ADC, Touch
+GPIO32	Ja	Ja	ADC, Touch, PWM
+GPIO33	Ja	Ja	ADC, Touch, PWM
+GPIO34	Ja	Nee	ADC
+GPIO35	Ja	Nee	ADC
+GPIO36	Ja	Nee	ADC, VP (internal signal)
+GPIO37	Ja	Nee	ADC, VN (internal signal)
+GPIO38	Ja	Nee	ADC
+GPIO39	Ja	Nee	ADC

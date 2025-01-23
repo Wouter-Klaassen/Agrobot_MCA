@@ -25,6 +25,8 @@
 
 rcl_subscription_t servo_subscriber;
 std_msgs__msg__Int32 servo_msg;
+std_msgs__msg__Int32 msg;
+
 
 rcl_subscription_t xyz_subscriber;
 geometry_msgs__msg__Point32 xyz_msg;
@@ -44,8 +46,8 @@ enum states {
   AGENT_DISCONNECTED
 } state;
 
-#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
-#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
+// #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
+// #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
 
 #define LED_PIN 13
 
@@ -64,6 +66,27 @@ const int y_motorStepPin = 12;
 const int y_motorDirPin = 4;
 const int y_encoderA = 16;
 const int y_encoderB = 17;
+
+// // Motor 1
+// const int motorStepPin1 = 32;
+// const int motorDirPin1 = 33;
+// const int encoderA1 = 34;
+// const int encoderB1 = 35;
+
+// // Motor 2
+// const int motorStepPin2 = 25;
+// const int motorDirPin2 = 26;
+// const int encoderA2 = 14;
+// const int encoderB2 = 27;
+
+// // Motor 3
+// const int motorStepPin3 = 12;
+// const int motorDirPin3 = 4;
+// const int encoderA3 = 16;
+// const int encoderB3 = 17;
+
+// // Servomotor
+// const int servoPin = 13;
 
 //const int actuatorStepPin = 18;
 //const int actuatorDirPin = 5;
@@ -163,7 +186,6 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
 {
   (void) last_call_time;
   if (timer != NULL) {
-    rcl_publish(&publisher, &msg, NULL);
     msg.data++;
   }
 }
@@ -236,7 +258,8 @@ void destroy_entities()
   rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
   (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
 
-  rcl_publisher_fini(&publisher, &node);
+  rcl_subscription_fini(&xyz_subscriber, &node);
+  rcl_subscription_fini(&servo_subscriber, &node);
   rcl_timer_fini(&timer);
   rclc_executor_fini(&executor);
   rcl_node_fini(&node);
