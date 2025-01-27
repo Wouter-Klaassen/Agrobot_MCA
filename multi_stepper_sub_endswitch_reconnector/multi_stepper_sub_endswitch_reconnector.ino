@@ -33,6 +33,7 @@ geometry_msgs__msg__Point32 xyz_msg;
 
 rclc_executor_t executor;
 rclc_support_t support;
+rcl_publisher_t publisher;
 rcl_allocator_t allocator;
 rcl_node_t node;
 rcl_timer_t timer;
@@ -45,9 +46,9 @@ enum states {
   AGENT_CONNECTED,
   AGENT_DISCONNECTED
 } state;
-
-// #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
-// #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
+//
+//#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
+//#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
 
 #define LED_PIN 13
 
@@ -234,6 +235,13 @@ bool create_entities()
     ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Point32),
       "/xyz"));
 
+  // create pub 
+  RCCHECK(rclc_publisher_init_best_effort(
+    &publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+    "std_msgs_msg_Int32"));
+
   const unsigned int timer_timeout = 1000;
   RCCHECK(rclc_timer_init_default(
     &timer,
@@ -258,8 +266,9 @@ void destroy_entities()
   rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
   (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
 
-  rcl_subscription_fini(&xyz_subscriber, &node);
   rcl_subscription_fini(&servo_subscriber, &node);
+  rcl_subscription_fini(&xyz_subscriber, &node);
+  rcl_publisher_fini(&publisher, &node);
   rcl_timer_fini(&timer);
   rclc_executor_fini(&executor);
   rcl_node_fini(&node);
@@ -314,7 +323,7 @@ void Task1code( void * pvParameters){
         };
         break;
       case AGENT_CONNECTED:
-        EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 4)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+        EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 5)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
         if (state == AGENT_CONNECTED) {
           rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
         }
