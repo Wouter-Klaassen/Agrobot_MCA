@@ -12,6 +12,7 @@
 #include <rmw_microros/rmw_microros.h>
 
 #include <std_msgs/msg/int32.h>
+#include <std_msgs/msg/string.h>
 #include <std_msgs/msg/int8.h>
 
 #include <geometry_msgs/msg/point32.h>
@@ -27,9 +28,11 @@ rcl_subscription_t servo_subscriber;
 std_msgs__msg__Int32 servo_msg;
 std_msgs__msg__Int32 msg;
 
-
 rcl_subscription_t xyz_subscriber;
 geometry_msgs__msg__Point32 xyz_msg;
+
+rcl_subscription_t cmd_subscriber;
+std_msgs__msg__String cmd_msg;
 
 rclc_executor_t executor;
 rclc_support_t support;
@@ -202,6 +205,65 @@ void xyz_callback(const void * msgin)
   Serial.println(x1_targetPosition + x2_targetPosition + y_targetPosition);
 }
 
+void initiate() {
+  Serial.println("Initiate gestart: motor beweegt in de richting van de afnemende encoderwaarde.");
+
+  // Beweeg motor in de richting waarbij de encoderwaarde afneemt (met de klok mee)
+  digitalWrite(motorDirPin1, HIGH); // Richting instellen
+  
+  // Beweeg de motor totdat de knop wordt ingedrukt
+  while (digitalRead(knopPin) == HIGH) {  // Wacht totdat de knop wordt ingedrukt (HIGH = niet ingedrukt, LOW = ingedrukt)
+    unsigned long currentTime = micros();
+    if (currentTime - lastStepTime >= stepInterval) {
+      lastStepTime = currentTime;
+
+      // Stap voor de motor
+      digitalWrite(motorStepPin1, HIGH);
+      delayMicroseconds(5); // Korte puls
+      digitalWrite(motorStepPin1, LOW);
+    }
+  }
+
+  // Stop de motor zodra de knop wordt ingedrukt
+  Serial.println("Knop ingedrukt. Motor stopt.");
+  delay(500); // Korte pauze om trillingen te dempen
+
+  // Zet de motor 100 stappen in de negatieve richting
+  Serial.println("Motor maakt 100 stappen in de negatieve richting.");
+  digitalWrite(motorDirPin1, LOW); // Richting veranderen naar negatief
+  int stepsTaken = 0; // Tel het aantal stappen
+  while (stepsTaken < 500) {
+    unsigned long currentTime = micros();
+    if (currentTime - lastStepTime >= stepInterval) {
+      lastStepTime = currentTime;
+
+      // Stap voor de motor
+      digitalWrite(motorStepPin1, HIGH);
+      delayMicroseconds(5); // Korte puls
+      digitalWrite(motorStepPin1, LOW);
+
+      stepsTaken++; // Verhoog de teller
+    }
+  }
+
+  // Reset de encoderwaarde naar 0
+  encoderPosition1 = 0;
+  Serial.println("Encoderwaarde gereset naar 0.");
+}
+
+void cmd_callback(const void * msgin){
+  const std_msgs__msg__String* msg = (const std_msgs__msg__String*)msgin;
+  Serial.print(msg);
+
+  if ( msg == "reset") {
+    encoderPosition1 = 0; // Reset de encoderpositie naar 0
+    Serial.println("Encoderwaarde gereset naar 0.");
+  }
+  else if (msg == "initiate") {
+    initiate();
+  }
+}
+
 void error_loop(){
   while(1){
     digitalWrite(LED_PIN, !digitalRead(LED_PIN));
@@ -234,6 +296,12 @@ bool create_entities()
     ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Point32),
       "/xyz"));
 
+  RCCHECK(rclc_subscription_init_default(
+    &cmd_subscriber,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String),
+      "/cmd"));
+
   const unsigned int timer_timeout = 1000;
   RCCHECK(rclc_timer_init_default(
     &timer,
@@ -244,10 +312,12 @@ bool create_entities()
 
   // create executor
   executor = rclc_executor_get_zero_initialized_executor();
-  RCCHECK(rclc_executor_init(&executor, &support.context, 3, &allocator));
+  RCCHECK(rclc_executor_init(&executor, &support.context, 4, &allocator));
   RCCHECK(rclc_executor_add_timer(&executor, &timer));
   RCCHECK(rclc_executor_add_subscription(&executor, &servo_subscriber, &servo_msg, &servo_callback, ON_NEW_DATA));
   RCCHECK(rclc_executor_add_subscription(&executor, &xyz_subscriber, &xyz_msg, &xyz_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &cmd_subscriber, &cmd_msg, &cmd_callback, ON_NEW_DATA));
+
 
 
   return true;
@@ -260,6 +330,7 @@ void destroy_entities()
 
   rcl_subscription_fini(&xyz_subscriber, &node);
   rcl_subscription_fini(&servo_subscriber, &node);
+  rcl_subscriptin_fini(&cmd_subcriber, &node);
   rcl_timer_fini(&timer);
   rclc_executor_fini(&executor);
   rcl_node_fini(&node);
