@@ -1,12 +1,12 @@
 // Motorpinnen
-const int motorStepPin1 = 32; 
-const int motorDirPin1 = 33; 
+const int motorStepPin1 = 4; //x:32, x2:14
+const int motorDirPin1 = 2; //x:33, x2:12
 
 // Encoderpinnen
-const int encoderA1 = 36;  // Encoder 1 A pin
-const int encoderB1 = 39;  // Encoder 1 B pin
+const int encoderA1 = 17;  // Encoder 1 A pin x:34, x2:26
+const int encoderB1 = 16;  // Encoder 1 B pin x:35, x2:27
 
-const int knopPin = 27;
+const int knopPin = 15; //x: 25, x2:13
 
 // Encoderpositie
 volatile int encoderPosition1 = 0;

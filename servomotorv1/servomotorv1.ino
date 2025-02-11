@@ -4,7 +4,7 @@ Servo myservo;
 
 int pos;
 
-int servoPin = 18;
+int servoPin = 26;
 
 bool ismoved = false;
 

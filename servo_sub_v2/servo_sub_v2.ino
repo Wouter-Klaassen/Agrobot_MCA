@@ -38,20 +38,26 @@ rcl_timer_t timer;
 
 
 // Stepper x
-#define X_STEP_PIN 19 // step pin
-#define X_DIR_PIN 18 // Direction pin
+#define X_STEP_PIN 32 // step pin
+#define X_DIR_PIN 33 // Direction pin
 
 AccelStepper x_stepper(AccelStepper::DRIVER, X_STEP_PIN, X_DIR_PIN);
 
+// Stepper x 2
+#define X2_STEP_PIN 4 // step pin
+#define X2_DIR_PIN 2 // Direction pin
+
+AccelStepper x2_stepper(AccelStepper::DRIVER, X2_STEP_PIN, X2_DIR_PIN);
+
 // Stepper y
-#define Y_STEP_PIN 23 // step pin
-#define Y_DIR_PIN 22 // dir pin
+#define Y_STEP_PIN 14 // step pin
+#define Y_DIR_PIN 12 // dir pin
 
 AccelStepper y_stepper(AccelStepper::DRIVER, Y_STEP_PIN, Y_DIR_PIN);
 
 //Stepper x
-#define Z_STEP_PIN 12
-#define Z_DIR_PIN 14
+#define Z_STEP_PIN 18
+#define Z_DIR_PIN 19
 
 AccelStepper z_stepper(AccelStepper::DRIVER, Z_STEP_PIN, Z_DIR_PIN);
 
@@ -96,8 +102,9 @@ void xyz_callback(const void * msgin)
   float y = msg->y;
   float z = msg->z;
   x_stepper.moveTo(x);
+  x2_stepper.moveTo(z);
   y_stepper.moveTo(y);
-  z_stepper.moveTo(z);
+//  z_stepper.moveTo(z);
   
 }
 
@@ -154,6 +161,12 @@ void setup() {
   x_stepper.setSpeed(SPEED);
   x_stepper.setAcceleration(ACCELERATION);
 
+  // x stepper setup
+  x2_stepper.setMaxSpeed(MAXSPEED);
+  x2_stepper.setSpeed(SPEED);
+  x2_stepper.setAcceleration(ACCELERATION);
+
+
   // y stepper setup
   y_stepper.setMaxSpeed(MAXSPEED);
   y_stepper.setSpeed(SPEED);
@@ -165,6 +178,7 @@ void setup() {
   z_stepper.setAcceleration(ACCELERATION);
 //
   x_stepper.moveTo(0);
+  x2_stepper.moveTo(0);
   y_stepper.moveTo(0);
   z_stepper.moveTo(0);
 
@@ -190,6 +204,7 @@ void Task2code( void * pvParameters){
   Serial.print("Task2 Running on Core ");
   Serial.println(xPortGetCoreID());
   for(;;){
+    x2_stepper.run();
     x_stepper.run();
     y_stepper.run();
     z_stepper.run();
